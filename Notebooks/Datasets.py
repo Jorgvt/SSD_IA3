@@ -92,6 +92,6 @@ class EDFData_PTH(EDFData, torch.utils.data.Dataset):
 if __name__ == '__main__':
     rel_path = abspath(join(dirname(__file__)))
     prueba = EDFData_TF(rel_path+"/../Data/PSG1.edf", batch_size=16, channels=['F4'])
-    prueba_2 = EDFData_TF_2(rel_path+"/../Data/PSG1.edf", batch_size=16, channels=['F4'])
+    prueba_2 = EDFData_TF_old(rel_path+"/../Data/PSG1.edf", batch_size=16, channels=['F4'])
     prueba_3 = EDFData_PTH(rel_path+"/../Data/PSG1.edf", channels=['F4'])
     print()
