@@ -18,3 +18,10 @@ Sleep Stage Detection study as part of the final thesis of the Master IA^3.
 - Plot de labels/preds en función del tiempo
 - Accuracy
 - ¿F1?
+
+# Distribución de las tareas
+| Tarea | Pablo | Francesco | Jorge |
+|-------|-------|-----------|-------|
+| Problema binario | | :heavy_check_mark: | |
+| Todos los datos | :heavy_check_mark: | | |
+| Visualizaciones | | | :heavy_check_mark: |
