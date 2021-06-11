@@ -21,7 +21,7 @@ Sleep Stage Detection study as part of the final thesis of the Master IA^3.
 
 # Distribución de las tareas
 | Tarea | Pablo | Francesco | Jorge |
-|-------|-------|-----------|-------|
-| Problema binario | | :heavy_check_mark: | |
-| Todos los datos | :heavy_check_mark: | | |
-| Visualizaciones | | | :heavy_check_mark: |
+|-------|:-------:|:-----------:|:-------:|
+| Problema binario | | :construction_worker: | |
+| Todos los datos | :construction_worker: | | |
+| Visualizaciones | | | :construction_worker: |
