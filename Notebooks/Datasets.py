@@ -17,7 +17,7 @@ class EDFData():
     def get_epochs(self, path):
         data = mne.io.read_raw_edf(path)
         sampling_rate = data.info['sfreq']
-        events, events_id = mne.events_from_annotations(data, regexp='Sleep stage')
+        events, events_id = mne.events_from_annotations(data, regexp='Sleep stage [A-Z]\d*')
 
         tmax = 30. - 1. / sampling_rate  # tmax is included
         epochs = mne.Epochs(raw=data, 
@@ -81,7 +81,7 @@ class EDFData_PTH(EDFData, torch.utils.data.Dataset):
 
 
     def __getitem__(self, idx):
-        return torch.squeeze(torch.Tensor(self.epochs[idx].load_data()._data)), torch.Tensor([self.epochs[idx].events[0][-1]])-1
+        return torch.squeeze(torch.Tensor(self.epochs[idx].load_data()._data), dim=1), torch.Tensor([self.epochs[idx].events[0][-1]])-1
     # def __getitem__(self, idx):
     #     return self.epochs[idx]._data, self.epochs[idx].events[0][-1]
 
