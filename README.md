@@ -28,3 +28,10 @@ Sleep Stage Detection study as part of the final thesis of the Master IA^3.
 
 :construction_worker: &rarr; Work in progress
 :white_check_mark: &rarr; Completed
+
+Notes:
+- alternativamente a un for con un if else?
+- a sleep stage W le associo il label 1, pero tendria que apuntarlo? No bien
+- tensorflow.python.framework.errors_impl.InvalidArgumentError:  Conv2DCustomBackpropInputOp only supports NHWC.
+     [[node gradient_tape/sequential/conv1d_3/conv1d/Conv2DBackpropInput
+- self.data = mne.io.read_raw_edf(path) # self.sampling_frequency = int(self.data.info['sfreq']) como mejoria

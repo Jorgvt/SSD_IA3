@@ -1,0 +1,4 @@
+mne
+tensorflow
+torch
+matplotlib
