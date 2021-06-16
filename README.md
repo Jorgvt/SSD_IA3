@@ -10,6 +10,7 @@ Sleep Stage Detection study as part of the final thesis of the Master IA^3.
 - [ ] Probar un modelo de clasificación binaria que solo tenga que distinguir entre despierto y durmiendo.
 - [ ] **Crear una pipeline donde solamente tengamos que cambiar el modelo y tocar algunas palancas.**
 - [ ] **Incluir W&B en la pipeline anterior**. Esto implica decidir todas las cosas que nos gustaría trackear.
+- [ ] Añadir opciones de normalización a los datasets custom.
 
 ## Cosas que podría estar bien trackear en todos los experimentos
 - Arquitectura
@@ -25,6 +26,7 @@ Sleep Stage Detection study as part of the final thesis of the Master IA^3.
 | Problema binario | | :construction_worker: | |
 | Todos los datos | :construction_worker: | | |
 | Visualizaciones | | | :construction_worker: |
+| Normalización datasets custom | | | :construction_worker: |
 
 :construction_worker: &rarr; Work in progress
 :white_check_mark: &rarr; Completed
