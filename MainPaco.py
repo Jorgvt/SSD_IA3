@@ -6,10 +6,10 @@ import Notebooks.DatasetsPaco
 
 if __name__ == '__main__':
 
-    dataset = Notebooks.DatasetsPaco.EDFData_TF_old("../SSD_IA3/Data/PSG1.edf", batch_size=8, channels=['F4'], binary_labels=True)
-    dataset_2 = Notebooks.DatasetsPaco.EDFData_TF_old("../SSD_IA3/Data/PSG2.edf", batch_size=8, channels=['F4'], binary_labels=True)
+    dataset = Notebooks.DatasetsPaco.EDFData_TF_old("../Data/PSG1.edf", batch_size=8, channels=['F4'], binary_labels=True)
+    dataset_2 = Notebooks.DatasetsPaco.EDFData_TF_old("../Data/PSG2.edf", batch_size=8, channels=['F4'], binary_labels=True)
 
-    data = np.squeeze(dataset.epochs.load_data()) # np.squeeze(dataset.epochs._data) data = dataset.epochs.get_data() # np.squeeze(dataset.epochs._data) #
+    data = np.squeeze(dataset.epochs.load_data()) # np.squeeze(dataset.epochs.load_data()) / np.squeeze(dataset.epochs._data) / dataset.epochs.get_data() / np.squeeze(dataset.epochs._data)
     print(data.shape)
     data_2 = np.squeeze(dataset_2.epochs.load_data())
     print(data_2.shape)
@@ -35,7 +35,7 @@ if __name__ == '__main__':
     model = tf.keras.models.Sequential([
         tf.keras.layers.Conv1D(128, kernel_size=sr // 2, padding='same', strides=sr // 4, activation="relu",
                                data_format='channels_last',
-                               input_shape=(15360, 1)),  # default = channel last
+                               input_shape=(15360, 1)),  # 15360 / 128 = 120
         tf.keras.layers.MaxPooling1D(8),
         tf.keras.layers.Dropout(0.5),
         tf.keras.layers.Conv1D(128, kernel_size=8, padding='same', strides=1, activation="relu",
@@ -55,7 +55,7 @@ if __name__ == '__main__':
                   optimizer=tf.optimizers.Adam(learning_rate=0.001), metrics=["accuracy"])
     model.summary()
 
-    X_tr = np.transpose(np.expand_dims(data, 1), (0, 2, 1))  # samples x # points x # channels
+    X_tr = np.transpose(np.expand_dims(data, 1), (0, 2, 1))  # samples x # points x # channels, pero no puedo mas si mas que uno eh
     X_te = np.transpose(np.expand_dims(data_2, 1), (0, 2, 1))
     history = model.fit(X_tr, labels, epochs=50, validation_data=(X_te, labels_2))
 
