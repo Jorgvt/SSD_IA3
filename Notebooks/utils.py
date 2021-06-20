@@ -44,3 +44,28 @@ def plot_heatmaps_raw(data, threshold = None, precision = 1, cmap='magma'):
             color = 'k'
 
         plt.text(j, i, f"{z:0.{precision}f}", ha = "center", va = "center", color = color)
+
+def plot_history(history):
+    """
+    Plots the history values.
+
+    Parameters
+    ----------
+    history: History object
+
+    Returns
+    -------
+    None
+    """
+    ## First retrieve metrics names ## 
+    metrics_names = [a for a in history.history.keys() if a[:3]!='val']
+    
+    rows = 1
+    cols = len(metrics_names)
+
+    for i,a in enumerate(metrics_names,1):
+        plt.subplot(rows,cols,i)
+        plt.title(a)
+        plt.plot(history_epoch.history[a], label="Train")
+        plt.plot(history_epoch.history["val_"+a], label="Validation")
+        plt.legend()
