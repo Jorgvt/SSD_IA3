@@ -13,7 +13,8 @@ class EDFData():
         self.channels = channels if channels else 'all'
         self.epochs, self.sampling_rate = self.get_epochs(path)
         self.id_to_class_dict = {value-1:key for key, value in self.epochs.event_id.items()}
-        self.mean = self.calculate_mean(self.epochs)
+        # self.mean = self.calculate_mean(self.epochs)
+        self.mean, self.std = self.iterative_mean_std()
 
     def get_epochs(self, path):
         data = mne.io.read_raw_edf(path)
@@ -38,6 +39,16 @@ class EDFData():
         for i,a in enumerate(epochs,0):
             mean = mean + (1/(i+1))*(a.mean(axis=-1)-mean)
         return mean
+
+    def iterative_mean_std(self):
+        std = 0
+        mean = 0
+        for i, a in enumerate(self.epochs, 0):
+            a = a.mean(axis=-1)
+            new_mean = mean + (1/(i+1))*(a-mean)
+            std = std + (1/(i+1))*((a-mean)*(a-new_mean)-std)
+            mean = new_mean
+        return mean, std**(1/2)
 
 class EDFData_TF_old(EDFData, tf.keras.utils.Sequence):
     def __init__(self, path, batch_size, channels=None):
@@ -75,7 +86,7 @@ class EDFData_TF(EDFData, tf.keras.utils.Sequence):
         Y = self.epochs[idx * self.batch_size:(idx + 1)*self.batch_size].events[:,-1]-1
 
         # return tf.squeeze(tf.Tensor(self.epochs[idx].load_data()._data)), tf.Tensor([self.epochs[idx].events[0][-1]])-1
-        return X, Y
+        return (X - self.mean)/self.std, Y
 
     def __len__(self):
         # In TF, len should return the number of batches
@@ -85,10 +96,13 @@ class EDFData_PTH(EDFData, torch.utils.data.Dataset):
     def __init__(self, path, channels=None):
         EDFData.__init__(self, path, channels)
         torch.utils.data.Dataset.__init__(self)
+        # self.standarize = std
 
 
     def __getitem__(self, idx):
-        return torch.squeeze(torch.Tensor(self.epochs[idx].load_data()._data), dim=1), torch.Tensor([self.epochs[idx].events[0][-1]])-1
+        X = torch.squeeze(torch.Tensor(self.epochs[idx].load_data()._data), dim=0)
+        X = (X - torch.unsqueeze(torch.tensor(self.mean),-1))/torch.unsqueeze(torch.tensor(self.std),-1)
+        return X, torch.Tensor([self.epochs[idx].events[0][-1]])-1
     # def __getitem__(self, idx):
     #     return self.epochs[idx]._data, self.epochs[idx].events[0][-1]
 
