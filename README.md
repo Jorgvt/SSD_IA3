@@ -27,7 +27,7 @@ Sleep Stage Detection study as part of the final thesis of the Master IA^3.
 |-------|:-------:|:-----------:|:-------:|
 | Problema binario | | :construction_worker: | |
 | Todos los datos | :construction_worker: | | |
-| Visualizaciones | | | :construction_worker: |
+| Visualizaciones | | | :white_check_mark: |
 | Normalización datasets custom | | | :construction_worker: |
 
 :construction_worker: &rarr; Work in progress
