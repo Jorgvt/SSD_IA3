@@ -8,9 +8,10 @@ import torch
 mne.set_log_level(verbose=False)
 
 class EDFData():
-    def __init__(self, path, channels=None):
+    def __init__(self, path, channels=None, binary=False):
         self.path = path
         self.channels = channels if channels else 'all'
+        self.binary = binary
         self.epochs, self.sampling_rate = self.get_epochs(path)
         self.id_to_class_dict = {value-1:key for key, value in self.epochs.event_id.items()}
         # self.mean = self.calculate_mean(self.epochs)
@@ -93,8 +94,8 @@ class EDFData_TF(EDFData, tf.keras.utils.Sequence):
         return math.ceil(len(self.epochs)/self.batch_size)
 
 class EDFData_PTH(EDFData, torch.utils.data.Dataset):
-    def __init__(self, path, channels=None):
-        EDFData.__init__(self, path, channels)
+    def __init__(self, path, channels=None, binary=False):
+        EDFData.__init__(self, path, channels, binary)
         torch.utils.data.Dataset.__init__(self)
         # self.standarize = std
 
@@ -102,7 +103,17 @@ class EDFData_PTH(EDFData, torch.utils.data.Dataset):
     def __getitem__(self, idx):
         X = torch.squeeze(torch.Tensor(self.epochs[idx].load_data()._data), dim=0)
         X = (X - torch.unsqueeze(torch.tensor(self.mean),-1))/torch.unsqueeze(torch.tensor(self.std),-1)
-        return X, torch.Tensor([self.epochs[idx].events[0][-1]])-1
+        Y = torch.Tensor([self.epochs[idx].events[0][-1]])-1
+        
+        if self.binary:
+            cuac = []
+            for y in Y:
+                if self.id_to_class_dict[y.item()]=='Sleep stage W':
+                    cuac.append(1)
+                else:
+                    cuac.append(0)
+            Y = torch.tensor(cuac)
+        return X, Y
     # def __getitem__(self, idx):
     #     return self.epochs[idx]._data, self.epochs[idx].events[0][-1]
 
