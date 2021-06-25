@@ -104,7 +104,7 @@ class EDFData_PTH(EDFData, torch.utils.data.Dataset):
         X = torch.squeeze(torch.Tensor(self.epochs[idx].load_data()._data), dim=0)
         X = (X - torch.unsqueeze(torch.tensor(self.mean),-1))/torch.unsqueeze(torch.tensor(self.std),-1)
         Y = torch.Tensor([self.epochs[idx].events[0][-1]])-1
-        
+
         if self.binary:
             cuac = []
             for y in Y:
@@ -116,7 +116,7 @@ class EDFData_PTH(EDFData, torch.utils.data.Dataset):
         return X, Y
     # def __getitem__(self, idx):
     #     return self.epochs[idx]._data, self.epochs[idx].events[0][-1]
-
+ 
     def __len__(self):
         return len(self.epochs)
 
