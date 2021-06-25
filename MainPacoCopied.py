@@ -1,26 +1,27 @@
-import numpy as np
-from sklearn.preprocessing import StandardScaler
+import matplotlib.pyplot as plt
+import tensorflow as tf
 
 import Notebooks.DatasetsPaco
 import TinySleepNet
 
-import tensorflow as tf
-import matplotlib.pyplot as plt
-
 if __name__ == '__main__':
 
-    dataset = Notebooks.DatasetsPaco.EDFData_TF_old("../Data/PSG1.edf", batch_size=4, channels=['F4'], binary_labels=True)
+    binary_labels = True
+    channels = ['F4', 'O2']
+    dataset = Notebooks.DatasetsPaco.EDFData_TF_old("../Data/PSG1.edf", batch_size=64, channels=channels, binary_labels=binary_labels)
+    # dataset = Notebooks.DatasetsPaco.EDFData("../Data/PSG1.edf", channels=['F4', 'O2'], binary_labels=True)
 
     sr = int(dataset.sampling_rate)
-    model = TinySleepNet.TinySleepNet(sr, 512, 2) # anche se non sequential, ma functional, va tutto quel che c'e' dopo? # TinySleepNet.train(model, X, labels) que no entrena asi pero
-
-    print('## Note: Rerunning this cell uses the same model variables?')
+    classes = 5
+    if binary_labels:
+        classes = 2
+    model = TinySleepNet.TinySleepNet(sampling_rate=sr, channels=len(channels), classes=classes)
 
     def loss(model, x, y, training):
         loss_object = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=False)
         # training=training is needed only if there are layers with different
         # behavior during training versus inference (e.g. Dropout).
-        y_ = model(x, training=training)
+        y_ = model(x, training=training) # es como si lo prediga a lazar?
         return loss_object(y_true=y, y_pred=y_)
 
     def grad(model, inputs, targets):
@@ -32,12 +33,8 @@ if __name__ == '__main__':
     train_loss_results = []
     train_accuracy_results = []
 
-    num_epochs = 100
-    optimizer = tf.keras.optimizers.SGD(learning_rate=0.01)
-
-    model.compile(loss=tf.keras.losses.BinaryCrossentropy(),
-                  optimizer=tf.optimizers.Adam(learning_rate=0.001), metrics=["accuracy"])
-    model.fit(dataset, epochs=num_epochs)
+    num_epochs = 10
+    optimizer = tf.keras.optimizers.SGD(learning_rate=0.001)
 
     for epoch in range(num_epochs):
         epoch_loss_avg = tf.keras.metrics.Mean()
@@ -45,9 +42,7 @@ if __name__ == '__main__':
 
         # Training loop - using batches of 32?
         for x, y in dataset: # train_dataset
-
-            x = np.transpose(x, (0, 2, 1)) # da far dentro la classe nel return del get item
-
+            # y = y - 1
             # Optimize the model
             loss_value, grads = grad(model, x, y)
             optimizer.apply_gradients(zip(grads, model.trainable_variables))
@@ -58,7 +53,6 @@ if __name__ == '__main__':
             # training=True is needed, only if there are layers with different
             # behavior during training versus inference (e.g. Dropout).
             epoch_accuracy.update_state(y, model(x, training=True))
-
             # break # veo siempre el mismo batch
 
         # End epoch
@@ -81,3 +75,9 @@ if __name__ == '__main__':
     axes[1].set_xlabel("Epoch", fontsize=14)
     axes[1].plot(train_accuracy_results) # perche son sempre gli stessi samples
     plt.savefig("mygraph.png") # plt.show()
+
+    # solution # 2 does the same
+    # model.compile(loss=tf.keras.losses.SparseCategoricalCrossentropy(),
+    #               optimizer=tf.optimizers.Adam(learning_rate=0.001), metrics=["accuracy"]) # pero con # self.classes-1, sigmoid
+    # model.fit(dataset, epochs=num_epochs)
+    # model.summary()

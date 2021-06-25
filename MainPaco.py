@@ -6,8 +6,8 @@ import Notebooks.DatasetsPaco
 
 if __name__ == '__main__':
 
-    dataset = Notebooks.DatasetsPaco.EDFData_TF_old("../Data/PSG1.edf", batch_size=8, channels=['F4'], binary_labels=True)
-    dataset_2 = Notebooks.DatasetsPaco.EDFData_TF_old("../Data/PSG2.edf", batch_size=8, channels=['F4'], binary_labels=True)
+    dataset = Notebooks.DatasetsPaco.EDFData_TF_old("../Data/PSG1.edf", batch_size=8, channels=['F4'], binary_labels=False)
+    dataset_2 = Notebooks.DatasetsPaco.EDFData_TF_old("../Data/PSG2.edf", batch_size=8, channels=['F4'], binary_labels=False)
 
     data = np.squeeze(dataset.epochs.load_data()) # np.squeeze(dataset.epochs.load_data()) / np.squeeze(dataset.epochs._data) / dataset.epochs.get_data() / np.squeeze(dataset.epochs._data)
     print(data.shape)
@@ -51,13 +51,13 @@ if __name__ == '__main__':
         tf.keras.layers.Dense(5, activation="softmax")
     ])
 
-    model.compile(loss=tf.keras.losses.SparseCategoricalCrossentropy(),
+    model.compile(loss=tf.keras.losses.SparseCategoricalCrossentropy(), # CategoricalCrossentropy()
                   optimizer=tf.optimizers.Adam(learning_rate=0.001), metrics=["accuracy"])
     model.summary()
 
     X_tr = np.transpose(np.expand_dims(data, 1), (0, 2, 1))  # samples x # points x # channels, pero no puedo mas si mas que uno eh
     X_te = np.transpose(np.expand_dims(data_2, 1), (0, 2, 1))
-    history = model.fit(X_tr, labels, epochs=50, validation_data=(X_te, labels_2))
+    history = model.fit(X_tr, labels-1, epochs=50, validation_data=(X_te, labels_2))
 
     plt.figure(figsize=(16, 6))
     plt.subplot(1, 2, 1)
