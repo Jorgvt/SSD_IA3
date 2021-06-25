@@ -1,4 +1,5 @@
 import matplotlib.pyplot as plt
+import numpy as np
 
 def plot_labels(y_pred, y_true, label_mapper=None):
     """
@@ -16,6 +17,7 @@ def plot_labels(y_pred, y_true, label_mapper=None):
     if label_mapper:
         plt.yticks(list(label_mapper.keys()), list(label_mapper.values()))
     plt.legend()
+    plt.xlabel("Epochs")
 
 def plot_heatmaps_raw(data, threshold = None, precision = 1, cmap='magma'):    
     """
