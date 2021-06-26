@@ -57,7 +57,7 @@ if __name__ == '__main__':
 
     X_tr = np.transpose(np.expand_dims(data, 1), (0, 2, 1))  # samples x # points x # channels, pero no puedo mas si mas que uno eh
     X_te = np.transpose(np.expand_dims(data_2, 1), (0, 2, 1))
-    history = model.fit(X_tr, labels-1, epochs=50, validation_data=(X_te, labels_2))
+    history = model.fit(X_tr, labels-1, epochs=10, validation_data=(X_te, labels_2-1))
 
     plt.figure(figsize=(16, 6))
     plt.subplot(1, 2, 1)
@@ -70,4 +70,4 @@ if __name__ == '__main__':
     plt.plot(history.history["accuracy"], label="Train")
     plt.plot(history.history["val_accuracy"], label="Validation")
     plt.legend()
-    plt.show()
+    plt.savefig("mygraph.png") # plt.show()

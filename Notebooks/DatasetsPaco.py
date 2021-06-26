@@ -1,5 +1,4 @@
 import math
-from os.path import abspath, dirname, join
 
 import mne
 import tensorflow as tf
@@ -15,7 +14,8 @@ class EDFData():
         self.binary_labels = binary_labels
         self.epochs, self.sampling_rate = self.get_epochs(path)
         self.id_to_class_dict = {value - 1: key for key, value in self.epochs.event_id.items()}
-        self.mean = self.calculate_mean(self.epochs)
+        # self.mean = self.calculate_mean(self.epochs)
+        self.mean, self.std = self.iterative_mean_std()
 
     def get_epochs(self, path):
         data = mne.io.read_raw_edf(path)
@@ -44,6 +44,16 @@ class EDFData():
             mean = mean + (1 / (i + 1)) * (a.mean(axis=-1) - mean)
         return mean
 
+    def iterative_mean_std(self):
+        std = 0
+        mean = 0
+        for i, a in enumerate(self.epochs, 0):
+            a = a.mean(axis=-1)
+            new_mean = mean + (1/(i+1))*(a-mean)
+            std = std + (1/(i+1))*((a-mean)*(a-new_mean)-std)
+            mean = new_mean
+        return mean, std**(1/2)
+
     @staticmethod
     def get_binary_events_eventsids(events, events_id, awake_label='Sleep stage W'):
         assert awake_label in events_id
@@ -65,8 +75,9 @@ class EDFData():
 
 class EDFData_TF_old(EDFData, tf.keras.utils.Sequence):
     def __init__(self, path, batch_size, channels=None, binary_labels=False):
-        EDFData.__init__(self, path, channels)  # prova scommentato poi dopo recommenta
-        tf.keras.utils.Sequence.__init__(self)
+        EDFData.__init__(self, path, channels)
+        tf.keras.utils.Sequence.__init__(self) # anche se scommentato?
+
         self.path = path
         self.batch_size = batch_size
         self.channels = channels if channels else 'all'
@@ -92,20 +103,15 @@ class EDFData_TF(EDFData, tf.keras.utils.Sequence):
         self.batch_size = batch_size
 
     def __getitem__(self, idx):
-        # In TF, __getitem__ should return a full batch
-
         X = self.epochs[idx * self.batch_size:(idx + 1) * self.batch_size].load_data()._data
         Y = self.epochs[idx * self.batch_size:(idx + 1) * self.batch_size].events[:, -1] - 1
-
-        # return tf.squeeze(tf.Tensor(self.epochs[idx].load_data()._data)), tf.Tensor([self.epochs[idx].events[0][-1]])-1
         return X, Y
 
     def __len__(self):
-        # In TF, len should return the number of batches
         return math.ceil(len(self.epochs) / self.batch_size)
 
 
-class EDFData_PTH(EDFData, torch.utils.data.Dataset): # @jorgvt?
+class EDFData_PTH(EDFData, torch.utils.data.Dataset):
     def __init__(self, path, channels=None):
         EDFData.__init__(self, path, channels)
         torch.utils.data.Dataset.__init__(self)
@@ -119,11 +125,3 @@ class EDFData_PTH(EDFData, torch.utils.data.Dataset): # @jorgvt?
 
     def __len__(self):
         return len(self.epochs)
-
-
-# if __name__ == '__main__':
-#     rel_path = abspath(join(dirname(__file__)))
-#     prueba = EDFData_TF(rel_path + "/../Data/PSG1.edf", batch_size=16, channels=['F4'])
-#     prueba_2 = EDFData_TF_old(rel_path + "/../Data/PSG1.edf", batch_size=16, channels=['F4'])
-#     prueba_3 = EDFData_PTH(rel_path + "/../Data/PSG1.edf", channels=['F4'])
-#     print()
