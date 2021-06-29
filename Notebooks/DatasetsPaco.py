@@ -89,7 +89,17 @@ class EDFData_TF_old(EDFData, tf.keras.utils.Sequence):
         # In TF, should return a full batch?
         X = self.epochs[idx * self.batch_size:(idx + 1) * self.batch_size].load_data()._data
         Y = self.epochs[idx * self.batch_size:(idx + 1) * self.batch_size].events[:, -1]  # - 1 ?
-        return X, Y
+
+        # if self.binary:
+        #     cuac = []
+        #     for y in Y:
+        #         if self.id_to_class_dict[y.item()]=='Sleep stage W':
+        #             cuac.append(1)
+        #         else:
+        #             cuac.append(0)
+        #     Y = torch.tensor(cuac)
+
+        return tf.transpose(X, (0, 2, 1)), Y
 
     def __len__(self):
         # In TF, len should return the number of batches?
