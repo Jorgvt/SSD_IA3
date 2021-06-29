@@ -83,7 +83,7 @@ class EDFData_TF_old(EDFData, tf.keras.utils.Sequence):
         self.channels = channels if channels else 'all'
         self.binary_labels = binary_labels
         self.epochs, self.sampling_rate = self.get_epochs(path)
-        self.id_to_class_dict = {value - 1: key for key, value in self.epochs.event_id.items()}
+        self.id_to_class_dict = {value: key for key, value in self.epochs.event_id.items()}
 
     def __getitem__(self, idx):
         # In TF, should return a full batch?
