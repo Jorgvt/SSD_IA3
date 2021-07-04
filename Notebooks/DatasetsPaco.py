@@ -8,13 +8,12 @@ mne.set_log_level(verbose=False)
 
 
 class EDFData():
-    def __init__(self, path, channels=None, binary_labels=False):
+    def __init__(self, path, channels=None, binary_labels=True):
         self.path = path
         self.channels = channels if channels else 'all'
         self.binary_labels = binary_labels
         self.epochs, self.sampling_rate = self.get_epochs(path)
         self.id_to_class_dict = {value - 1: key for key, value in self.epochs.event_id.items()}
-        # self.mean = self.calculate_mean(self.epochs)
         self.mean, self.std = self.iterative_mean_std()
 
     def get_epochs(self, path):
@@ -49,10 +48,10 @@ class EDFData():
         mean = 0
         for i, a in enumerate(self.epochs, 0):
             a = a.mean(axis=-1)
-            new_mean = mean + (1/(i+1))*(a-mean)
-            std = std + (1/(i+1))*((a-mean)*(a-new_mean)-std)
+            new_mean = mean + (1 / (i + 1)) * (a - mean)
+            std = std + (1 / (i + 1)) * ((a - mean) * (a - new_mean) - std)
             mean = new_mean
-        return mean, std**(1/2)
+        return mean, std ** (1 / 2)
 
     @staticmethod
     def get_binary_events_eventsids(events, events_id, awake_label='Sleep stage W'):
@@ -76,28 +75,24 @@ class EDFData():
 class EDFData_TF_old(EDFData, tf.keras.utils.Sequence):
     def __init__(self, path, batch_size, channels=None, binary_labels=False):
         EDFData.__init__(self, path, channels)
-        tf.keras.utils.Sequence.__init__(self) # anche se scommentato?
+        tf.keras.utils.Sequence.__init__(self)
 
         self.path = path
         self.batch_size = batch_size
-        self.channels = channels if channels else 'all'
+        self.channels = channels if channels else 'all' # da cambiare
         self.binary_labels = binary_labels
-        self.epochs, self.sampling_rate = self.get_epochs(path)
+        # self.epochs, self.sampling_rate = self.get_epochs(path)
         self.id_to_class_dict = {value: key for key, value in self.epochs.event_id.items()}
 
     def __getitem__(self, idx):
-        # In TF, should return a full batch?
-        X = self.epochs[idx * self.batch_size:(idx + 1) * self.batch_size].load_data()._data
-        Y = self.epochs[idx * self.batch_size:(idx + 1) * self.batch_size].events[:, -1]  # - 1 ?
 
-        # if self.binary:
-        #     cuac = []
-        #     for y in Y:
-        #         if self.id_to_class_dict[y.item()]=='Sleep stage W':
-        #             cuac.append(1)
-        #         else:
-        #             cuac.append(0)
-        #     Y = torch.tensor(cuac)
+        # X = self.epochs[idx * self.batch_size:(idx + 1) * self.batch_size].get_data() # en lugar che load_data()._data
+        # Y = self.epochs[idx * self.batch_size:(idx + 1) * self.batch_size].events[:, -1]
+
+        X = self.epochs.get_data()
+        Y = self.epochs.events[:, -1]
+
+        X = (X - self.mean)/self.std
 
         return tf.transpose(X, (0, 2, 1)), Y
 

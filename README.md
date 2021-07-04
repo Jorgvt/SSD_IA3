@@ -30,6 +30,9 @@ Sleep Stage Detection study as part of the final thesis of the Master IA^3.
 :white_check_mark: &rarr; Completed
 
 Notes:
+
+- get item e len quando  che vengono chiamati? durante il for
+
 - alternativamente a un for con un if else?
 - a sleep stage W le associo il label 1, pero tendria que apuntarlo? No bien
 - tensorflow.python.framework.errors_impl.InvalidArgumentError:  Conv2DCustomBackpropInputOp only supports NHWC.

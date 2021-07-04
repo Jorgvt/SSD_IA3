@@ -9,13 +9,11 @@ class TinySleepNet(tf.keras.Model):
         self.sampling_rate = sampling_rate
         self.channels = channels
         self.classes = classes
-        # self.inputs = tf.keras.layers.Input(shape=(sampling_rate*30, self.channels)) # x = self.inputs(x) ?
         self.conv1d = tf.keras.layers.Conv1D(128,
                                              kernel_size=self.sampling_rate // 2,
                                              padding='same',
                                              activation='relu',
-                                             strides=self.sampling_rate // 4,
-                                             input_shape=(sampling_rate * 30, self.channels))
+                                             strides=self.sampling_rate // 4)
         self.maxPol1D1 = tf.keras.layers.MaxPooling1D(8)
         self.dropout1 = tf.keras.layers.Dropout(0.5)
         self.conv1d2 = tf.keras.layers.Conv1D(128, kernel_size=8, padding='same', strides=1, activation="relu")
@@ -28,9 +26,8 @@ class TinySleepNet(tf.keras.Model):
         self.dense = tf.keras.layers.Dense(self.classes, activation="softmax")
 
     def call(self, x):
-        x = tf.transpose(x, (0, 2, 1))
         x = self.conv1d(x)
-        # x = self.maxPol1D1(x)
+        x = self.maxPol1D1(x)
         # x = self.dropout1(x)
         # x = self.conv1d2(x)
         # x = self.conv1d3(x)
@@ -38,5 +35,4 @@ class TinySleepNet(tf.keras.Model):
         # x = self.maxPol1D2(x)
         # x = self.dropout2(x)
         x = self.LSTM(x)
-        x = self.dense(x)
-        return x
+        return self.dense(x)
