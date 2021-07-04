@@ -2,3 +2,4 @@ mne
 tensorflow
 torch
 matplotlib
+wandb
