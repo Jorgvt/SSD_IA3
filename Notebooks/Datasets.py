@@ -101,10 +101,14 @@ class EDFData_PTH(EDFData, torch.utils.data.Dataset):
 
 
     def __getitem__(self, idx):
+        ## Load data in memory
         X = torch.squeeze(torch.Tensor(self.epochs[idx].load_data()._data), dim=0)
+        ## Standarize data
         X = (X - torch.unsqueeze(torch.tensor(self.mean),-1))/torch.unsqueeze(torch.tensor(self.std),-1)
+        ## Get labels
         Y = torch.Tensor([self.epochs[idx].events[0][-1]])-1
 
+        ## If binary, change Sleep stage W for 1 and the rest for 0
         if self.binary:
             cuac = []
             for y in Y:
@@ -114,9 +118,7 @@ class EDFData_PTH(EDFData, torch.utils.data.Dataset):
                     cuac.append(0)
             Y = torch.tensor(cuac)
         return X, Y
-    # def __getitem__(self, idx):
-    #     return self.epochs[idx]._data, self.epochs[idx].events[0][-1]
- 
+     
     def __len__(self):
         return len(self.epochs)
 
