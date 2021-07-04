@@ -13,8 +13,8 @@ class EDFData():
         self.channels = channels if channels else 'all'
         self.binary = binary
         self.epochs, self.sampling_rate = self.get_epochs(path)
-        self.id_to_class_dict = {value-1:key for key, value in self.epochs.event_id.items()}
-        # self.mean = self.calculate_mean(self.epochs)
+        self.id_to_class_dict_original = {value-1:key for key, value in self.epochs.event_id.items()}
+        self.id_to_class_dict = {0:'Sleeping', 1:'Awake'} if self.binary else self.id_to_class_dict_original
         self.mean, self.std = self.iterative_mean_std()
 
     def get_epochs(self, path):
@@ -34,12 +34,6 @@ class EDFData():
 
         epochs.drop_bad()
         return epochs, sampling_rate
-    
-    def calculate_mean(self, epochs):
-        mean = 0
-        for i,a in enumerate(epochs,0):
-            mean = mean + (1/(i+1))*(a.mean(axis=-1)-mean)
-        return mean
 
     def iterative_mean_std(self):
         std = 0
@@ -112,7 +106,7 @@ class EDFData_PTH(EDFData, torch.utils.data.Dataset):
         if self.binary:
             cuac = []
             for y in Y:
-                if self.id_to_class_dict[y.item()]=='Sleep stage W':
+                if self.id_to_class_dict_original[y.item()]=='Sleep stage W':
                     cuac.append(1)
                 else:
                     cuac.append(0)
