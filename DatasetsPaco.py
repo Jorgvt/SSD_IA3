@@ -80,7 +80,7 @@ class EDFData_TF_old(EDFData, tf.keras.utils.Sequence):
         self.batch_size = batch_size
         self.channels = channels if channels else 'all' # da cambiare
         self.binary_labels = binary_labels
-        # self.epochs, self.sampling_rate = self.get_epochs(path)
+        # self.epochs, self.sampling_rate = self.get_epochs(path) perché nella classe padre
         self.id_to_class_dict = {value: key for key, value in self.epochs.event_id.items()}
 
     def __getitem__(self, idx):
@@ -137,12 +137,9 @@ class EDFData_GEN_TF(EDFData):
 
     def __getitem__(self, idx):
         X = np.transpose(np.squeeze(self.epochs[idx].load_data()._data, axis=0), (1, 0))
-        Y = self.epochs[idx].events[0][-1]
+        Y = self.epochs[idx].events[0][-1] # return self.epochs[idx]._data, self.epochs[idx].events[0][-1]
         X = (X-self.mean)/self.std
         return X, Y
-
-    # def __getitem__(self, idx):
-    #     return self.epochs[idx]._data, self.epochs[idx].events[0][-1]
 
     def __len__(self):
         return len(self.epochs)
