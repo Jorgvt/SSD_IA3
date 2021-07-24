@@ -7,7 +7,7 @@ mne.set_log_level(verbose=False)
 
 
 class EDFData():
-    def __init__(self, path, channels=None, binary_labels=True):
+    def __init__(self, path, channels=None, binary_labels=False):
         self.path = path
         self.channels = channels if channels else 'all'
         self.binary_labels = binary_labels
@@ -18,7 +18,8 @@ class EDFData():
     def get_epochs(self, path):
         data = mne.io.read_raw_edf(path)
         sampling_rate = data.info['sfreq']
-        events, events_id = mne.events_from_annotations(data, regexp='Sleep stage [A-Z]\d*')
+        # events, events_id = mne.events_from_annotations(data, regexp='Sleep stage [A-Z]\d*') =>
+        events, events_id = mne.events_from_annotations(data, regexp='Sleep stage [N-R]\d*')
 
         if self.binary_labels:
             events, events_id = self.get_binary_events_eventsids(events, events_id)
@@ -78,9 +79,8 @@ class EDFData_TF_old(EDFData, tf.keras.utils.Sequence):
 
         self.path = path
         self.batch_size = batch_size
-        self.channels = channels if channels else 'all' # da cambiare
+        self.channels = channels if channels else 'all' # => ?
         self.binary_labels = binary_labels
-        # self.epochs, self.sampling_rate = self.get_epochs(path) perché nella classe padre
         self.id_to_class_dict = {value: key for key, value in self.epochs.event_id.items()}
 
     def __getitem__(self, idx):
@@ -93,8 +93,8 @@ class EDFData_TF_old(EDFData, tf.keras.utils.Sequence):
 
         X = (X - self.mean)/self.std
 
-        # return tf.transpose(X, (0, 2, 1)), Y
-        return np.transpose(X, (0, 2, 1)), Y
+        return np.transpose(X, (0, 2, 1)), Y # tf.transpose(X, (0, 2, 1)), Y
+
 
     def __len__(self):
         # In TF, len should return the number of batches?
@@ -137,7 +137,8 @@ class EDFData_GEN_TF(EDFData):
 
     def __getitem__(self, idx):
         X = np.transpose(np.squeeze(self.epochs[idx].load_data()._data, axis=0), (1, 0))
-        Y = self.epochs[idx].events[0][-1] # return self.epochs[idx]._data, self.epochs[idx].events[0][-1]
+        # Y = self.epochs[idx].events[0][-1] # return self.epochs[idx]._data, self.epochs[idx].events[0][-1] =>
+        Y = self.epochs[idx].events[0][-1] - 1
         X = (X-self.mean)/self.std
         return X, Y
 
