@@ -18,7 +18,7 @@ class EDFData():
     def get_epochs(self, path):
         data = mne.io.read_raw_edf(path)
         sampling_rate = data.info['sfreq']
-        # events, events_id = mne.events_from_annotations(data, regexp='Sleep stage [A-Z]\d*') =>
+        # events, events_id = mne.events_from_annotations(data, regexp='Sleep stage [A-Z]\d*') => piú pulito di ?
         events, events_id = mne.events_from_annotations(data, regexp='Sleep stage [N-R]\d*')
 
         if self.binary_labels:
@@ -88,16 +88,15 @@ class EDFData_TF_old(EDFData, tf.keras.utils.Sequence):
         X = self.epochs[idx * self.batch_size:(idx + 1) * self.batch_size].get_data()
         Y = self.epochs[idx * self.batch_size:(idx + 1) * self.batch_size].events[:, -1]
 
-        # X = self.epochs.get_data()
+        # X = self.epochs.get_data() => senza batch
         # Y = self.epochs.events[:, -1]
 
         X = (X - self.mean)/self.std
 
-        return np.transpose(X, (0, 2, 1)), Y # tf.transpose(X, (0, 2, 1)), Y
+        return np.transpose(X, (0, 2, 1)), Y
 
 
     def __len__(self):
-        # In TF, len should return the number of batches?
         return math.ceil(len(self.epochs) / self.batch_size)
 
 
@@ -115,29 +114,12 @@ class EDFData_TF(EDFData, tf.keras.utils.Sequence):
     def __len__(self):
         return math.ceil(len(self.epochs) / self.batch_size)
 
-
-class EDFData_PTH(EDFData, torch.utils.data.Dataset):
-    def __init__(self, path, channels=None):
-        EDFData.__init__(self, path, channels)
-        torch.utils.data.Dataset.__init__(self)
-
-    def __getitem__(self, idx):
-        return torch.squeeze(torch.Tensor(self.epochs[idx].load_data()._data), dim=1), torch.Tensor(
-            [self.epochs[idx].events[0][-1]]) - 1
-
-    # def __getitem__(self, idx):
-    #     return self.epochs[idx]._data, self.epochs[idx].events[0][-1]
-
-    def __len__(self):
-        return len(self.epochs)
-
 class EDFData_GEN_TF(EDFData):
     def __init__(self, path, channels=None):
         EDFData.__init__(self, path, channels)
 
     def __getitem__(self, idx):
-        X = np.transpose(np.squeeze(self.epochs[idx].load_data()._data, axis=0), (1, 0))
-        # Y = self.epochs[idx].events[0][-1] # return self.epochs[idx]._data, self.epochs[idx].events[0][-1] =>
+        X = np.transpose(np.squeeze(self.epochs[idx].load_data()._data, axis=0), (1, 0)) # load_data()._data = get_data()
         Y = self.epochs[idx].events[0][-1] - 1
         X = (X-self.mean)/self.std
         return X, Y
