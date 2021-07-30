@@ -61,13 +61,13 @@ class EDFData():
             if e[-1] == events_id[awake_label]:
                 e[-1] = 1
             else:
-                e[-1] = 0
+                e[-1] = 2
 
         for i in events_id:
             if i == awake_label:
                 events_id[i] = 1
             else:
-                events_id[i] = 0
+                events_id[i] = 2
 
         return events, events_id
 
@@ -120,7 +120,7 @@ class EDFData_GEN_TF(EDFData):
 
     def __getitem__(self, idx):
         X = np.transpose(np.squeeze(self.epochs[idx].load_data()._data, axis=0), (1, 0)) # load_data()._data = get_data()
-        Y = self.epochs[idx].events[0][-1] - 1
+        Y = self.epochs[idx].events[0][-1] - 1 
         X = (X-self.mean)/self.std
         return X, Y
 

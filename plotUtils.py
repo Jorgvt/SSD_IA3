@@ -24,3 +24,10 @@ def plot_history(history):
         plt.plot(history.history['val_'+m])
         plt.legend(['train', 'val'], loc='upper left')
         plt.show()
+
+def plot_hypnogram(labels_real, labels_predicted, labels):
+    plt.plot(labels_predicted)
+    plt.plot(labels_real)
+    plt.yticks(list(labels.keys()), list(labels.values()))
+    plt.legend(["True", "Predicted"], loc='upper right')
+    plt.show()
