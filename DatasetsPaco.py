@@ -7,7 +7,7 @@ mne.set_log_level(verbose=False)
 
 
 class EDFData():
-    def __init__(self, path, channels=None, binary_labels=False):
+    def __init__(self, path, channels=None, binary_labels=True):
         self.path = path
         self.channels = channels if channels else 'all'
         self.binary_labels = binary_labels
@@ -18,8 +18,8 @@ class EDFData():
     def get_epochs(self, path):
         data = mne.io.read_raw_edf(path)
         sampling_rate = data.info['sfreq']
-        # events, events_id = mne.events_from_annotations(data, regexp='Sleep stage [A-Z]\d*') => piú pulito di ?
-        events, events_id = mne.events_from_annotations(data, regexp='Sleep stage [N-R]\d*')
+        events, events_id = mne.events_from_annotations(data, regexp='Sleep stage [A-Z]\d*')
+        # events, events_id = mne.events_from_annotations(data, regexp='Sleep stage [N-R]\d*')
 
         if self.binary_labels:
             events, events_id = self.get_binary_events_eventsids(events, events_id)
