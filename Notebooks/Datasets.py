@@ -40,6 +40,7 @@ class EDFData():
         std = 0
         mean = 0
         for i, a in enumerate(self.epochs, 0):
+            ## Mean and Std calculation
             a = a.mean(axis=-1)
             new_mean = mean + (1/(i+1))*(a-mean)
             std = std + (1/(i+1))*((a-mean)*(a-new_mean)-std)
@@ -116,8 +117,11 @@ class EDFData_PTH(EDFData, torch.utils.data.Dataset):
     def __getitem__(self, idx):
         ## Load data in memory
         X = torch.squeeze(torch.Tensor(self.epochs[idx].get_data()), dim=0)
-        ## Standarize data
-        X = (X - torch.unsqueeze(torch.tensor(self.mean),-1))/torch.unsqueeze(torch.tensor(self.std),-1)
+        # ## Standarize data
+        # X = (X - torch.unsqueeze(torch.tensor(self.mean),-1))/torch.unsqueeze(torch.tensor(self.std),-1)
+        ## Normalize and substract mean
+        X = X / torch.unsqueeze(X.max(dim=1).values, -1)
+        X = X - torch.unsqueeze(X.mean(dim=1), -1)
         ## Get labels
         Y = torch.Tensor([self.epochs[idx].events[0][-1]])-1
 
