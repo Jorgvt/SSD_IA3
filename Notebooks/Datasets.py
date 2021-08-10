@@ -1,6 +1,7 @@
 import math
 from os.path import abspath, dirname, join
 
+import numpy as np
 import mne
 import tensorflow as tf
 import torch
@@ -44,6 +45,24 @@ class EDFData():
             std = std + (1/(i+1))*((a-mean)*(a-new_mean)-std)
             mean = new_mean
         return mean, std**(1/2)
+    
+    @staticmethod
+    def refit_std(datasets):
+        """
+        Takes a list of datasets as input and calculates the common mean and std.
+        Then sets their individual mean and std to the common one. 
+        This would be the equivalent to standarize them all together.
+
+        Parameters
+        ----------
+        datasets: list[EDFData]
+        """
+        common_mean = np.mean([dataset.mean for dataset in datasets], axis=0)
+        common_std = np.mean([dataset.std for dataset in datasets], axis=0)
+
+        for dataset in datasets:
+            dataset.mean = common_mean
+            dataset.std = common_std
 
 class EDFData_TF_old(EDFData, tf.keras.utils.Sequence):
     def __init__(self, path, batch_size, channels=None):
@@ -96,7 +115,7 @@ class EDFData_PTH(EDFData, torch.utils.data.Dataset):
 
     def __getitem__(self, idx):
         ## Load data in memory
-        X = torch.squeeze(torch.Tensor(self.epochs[idx].load_data()._data), dim=0)
+        X = torch.squeeze(torch.Tensor(self.epochs[idx].get_data()), dim=0)
         ## Standarize data
         X = (X - torch.unsqueeze(torch.tensor(self.mean),-1))/torch.unsqueeze(torch.tensor(self.std),-1)
         ## Get labels
