@@ -1,7 +1,11 @@
 import os
 from glob import glob
+import re 
+import math
+from pathlib import Path 
 import warnings
 warnings.filterwarnings("ignore", category=RuntimeWarning) 
+
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -83,7 +87,27 @@ def accuracy_fn(Y_pred, Y_true):
     accuracy = torch.where(Y_pred==Y_true, 1, 0).sum() / len(Y_true)
 
     return accuracy.item()
-    
+
+def get_order(file_path):
+    """
+    Used to order the results from glob, so that the patients are
+    properly concatenated.
+    """
+    match = file_pattern.match(Path(file_path).name)
+    if not match:
+        return math.inf
+    return int(match.groups()[0])
+
+def weights_init(m):
+    """
+    Initialize the network's weights with a Xavier-Glorot uniform distribution
+    to match Keras' implementation.
+    """
+    if isinstance(m, nn.Conv1d) or isinstance(m, nn.Linear):
+        nn.init.xavier_uniform_(m.weight.data)
+        if m.bias is not None:
+            nn.init.zeros_(m.bias.data)
+
 if __name__ == "__main__":
     
     ## Login into WandB
@@ -91,12 +115,12 @@ if __name__ == "__main__":
 
     ## Define the configuration parameters
     config = {
-        'epochs':25,
+        'epochs':50,
         'classes':5,
-        'batch_size':32,
+        'batch_size':64,
         'learning_rate':0.001,
         'channels':['C3','C4','O1','O2','LOC','ROC','CHIN1'],
-        'binary':True,
+        'binary':False,
         'metadata': "Testing from script",
         'test_size':0.3,
         'train_test_split_seed':42
@@ -110,27 +134,43 @@ if __name__ == "__main__":
     with wandb.init(project='test-pth', entity='jorgvt', config = config):
         config = wandb.config
 
+        ## Define the regex to sort the files and obtain the paths list
+        file_pattern = re.compile(r'.*?(\d+).*?')
+        sorted_files = sorted(glob("/media/usbdisk/data/ProyectoPSG/data/*.edf"), key=get_order)
+        ### Remove the 10th patient
+        sorted_files_no_10 = [a for a in sorted_files if re.findall(r'\d+', a)[0]!='10']
+
         ## Load the data
-        datasets = [EDFData_PTH(path_glob, channels=config.channels, binary=config.binary) for path_glob in glob("../Data/*.edf")]
+        datasets = [EDFData_PTH(path_glob, channels=config.channels, binary=config.binary) for path_glob in sorted_files_no_10]
 
         ## Concat all the individual files' datasets
         dataset_concat = torch.utils.data.ConcatDataset(datasets)
         len_dataset_concat = len(dataset_concat)
 
-        ## Train-Test split of the data
-        test_size = int(len_dataset_concat*config.test_size)
-        train_size = len_dataset_concat - test_size
-        train, test = torch.utils.data.random_split(dataset_concat, [train_size, test_size], 
-                                                    generator=torch.Generator().manual_seed(config.train_test_split_seed))
+        # ## Train-Test split of the data
+        # test_size = int(len_dataset_concat*config.test_size)
+        # train_size = len_dataset_concat - test_size
+        # train, test = torch.utils.data.random_split(dataset_concat, [train_size, test_size], 
+        #                                             generator=torch.Generator().manual_seed(config.train_test_split_seed))
+        
+        ## Train-Test split using Pablo's indexes
+        ### Load indexes. They have to be either ints or booleans.
+        idx_train = np.loadtxt("../indices_train.txt").astype(int)
+        idx_test = np.loadtxt("../indices_test.txt").astype(int)
+        ### Subset the concatenated dataset
+        train = torch.utils.data.Subset(dataset_concat, indices=idx_train)
+        test = torch.utils.data.Subset(dataset_concat, indices=idx_test)
         print(f"Using {len_dataset_concat} samples to train: {len(train)} (Train) & {len(test)} (Test).")
 
         ## Instance the dataloaders
-        trainloader = torch.utils.data.DataLoader(train, batch_size = config.batch_size, drop_last=True)
-        testloader = torch.utils.data.DataLoader(test, batch_size = config.batch_size, drop_last=True)
+        trainloader = torch.utils.data.DataLoader(train, batch_size = config.batch_size, drop_last=True, shuffle=True)
+        testloader = torch.utils.data.DataLoader(test, batch_size = config.batch_size, drop_last=True, shuffle=True)
         sampling_rate = int(datasets[0].sampling_rate)
 
         ## Define the model ##
         model = TinySleepNet(sampling_rate, config.channels, classes=config.classes)
+        ### Initialize its weights
+        model.apply(weights_init)
         model.to(device)
         optimizer = torch.optim.Adam(model.parameters())
         loss_fn = nn.CrossEntropyLoss()
@@ -166,4 +206,6 @@ if __name__ == "__main__":
         plot_cm(labels_test, preds_test, datasets[0])
         wandb.log({"Confusion_Matrix_Test":wandb.Image(plt)})
 
-
+        ## Update summary metrics
+        # wandb.run.summary["best_val_accuracy"] = checkpoint.best_metric
+        h.update_summary_metrics()
