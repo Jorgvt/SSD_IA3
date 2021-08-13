@@ -121,7 +121,7 @@ if __name__ == "__main__":
         'learning_rate':0.001,
         'channels':['C3','C4','O1','O2','LOC','ROC','CHIN1'],
         'binary':False,
-        'metadata': "Testing from script",
+        'metadata': "Testing loss weights",
         'test_size':0.3,
         'train_test_split_seed':42
     }
@@ -173,7 +173,7 @@ if __name__ == "__main__":
         model.apply(weights_init)
         model.to(device)
         optimizer = torch.optim.Adam(model.parameters())
-        loss_fn = nn.CrossEntropyLoss()
+        loss_fn = nn.CrossEntropyLoss(weight=torch.FloatTensor([1.63460515, 1. , 1.35084295, 1.56397516, 1.39006211]))
 
         ## Define the metrics ##
         metrics = {
