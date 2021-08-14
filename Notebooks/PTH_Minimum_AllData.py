@@ -173,7 +173,7 @@ if __name__ == "__main__":
         model.apply(weights_init)
         model.to(device)
         optimizer = torch.optim.Adam(model.parameters())
-        loss_fn = nn.CrossEntropyLoss(weight=torch.FloatTensor([1.63460515, 1. , 1.35084295, 1.56397516, 1.39006211]))
+        loss_fn = nn.CrossEntropyLoss(weight=torch.FloatTensor([1.63460515, 1. , 1.35084295, 1.56397516, 1.39006211]).to(device))
 
         ## Define the metrics ##
         metrics = {
