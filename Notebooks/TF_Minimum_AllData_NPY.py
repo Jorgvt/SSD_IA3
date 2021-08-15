@@ -12,6 +12,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from sklearn.preprocessing import LabelEncoder
 import tensorflow as tf
+import tensorflow_addons as tfa
 import mne
 mne.set_log_level(verbose=False)
 import wandb
@@ -162,6 +163,9 @@ if __name__ == "__main__":
         ## Train the model ##
         h = model.fit(train, batch_size=config.batch_size, epochs=config.epochs, validation_data=val,
                       callbacks=[WandbCallback(monitor='val_accuracy')])
+
+        ## Load the best performant model
+        model.load_weights(os.path.join(wandb.run.dir, "model-best.h5"))
 
         ## Get the predictions for the whole datasets
         preds_train = model.predict(train).argmax(axis=-1)
