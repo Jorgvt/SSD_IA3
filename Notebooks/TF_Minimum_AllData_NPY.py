@@ -87,7 +87,7 @@ if __name__ == "__main__":
 
     ## Define the configuration parameters
     config = {
-        'epochs':50,
+        'epochs':1,
         'classes':5,
         'batch_size':64,
         'learning_rate':0.001,
@@ -122,6 +122,7 @@ if __name__ == "__main__":
         ### Instantiate the LabelEncoder
         label_encoder = LabelEncoder()
         labels = label_encoder.fit_transform(labels)
+        idx_to_label = {i:c for i, c in enumerate(label_encoder.classes_)}
 
         # ## Train-Test split of the data
         # test_size = int(len_dataset_concat*config.test_size)
@@ -167,22 +168,18 @@ if __name__ == "__main__":
         preds_val = model.predict(val).argmax(axis=-1)
         preds_test = model.predict(test).argmax(axis=-1)
         
-        # ## Create and log figures
-        # ### Train
-        # plt.figure(figsize=(20,6))
-        # plot_labels(labels_train, preds_train, label_mapper=datasets[0].id_to_class_dict)
-        # wandb.log({"Labels_Preds_Plot_Train":wandb.Image(plt)})
-        # plt.figure(figsize=(8,8))
-        # plot_cm(labels_train, preds_train, datasets[0])
-        # wandb.log({"Confusion_Matrix_Train":wandb.Image(plt)})
-        # ### Test
-        # plt.figure(figsize=(20,6))
-        # plot_labels(labels_test, preds_test, label_mapper=datasets[0].id_to_class_dict)
-        # wandb.log({"Labels_Preds_Plot_Test":wandb.Image(plt)})
-        # plt.figure(figsize=(8,8))
-        # plot_cm(labels_test, preds_test, datasets[0])
-        # wandb.log({"Confusion_Matrix_Test":wandb.Image(plt)})
-
-        # ## Update summary metrics
-        # # wandb.run.summary["best_val_accuracy"] = checkpoint.best_metric
-        # h.update_summary_metrics()
+        ## Create and log figures
+        ### Train
+        plt.figure(figsize=(20,6))
+        plot_labels(train_labels, preds_train, label_mapper=idx_to_label)
+        wandb.log({"Labels_Preds_Plot_Train":wandb.Image(plt)})
+        plt.figure(figsize=(8,8))
+        plot_cm_dict(train_labels, preds_train, label_mapper=idx_to_label)
+        wandb.log({"Confusion_Matrix_Train":wandb.Image(plt)})
+        ### Test
+        plt.figure(figsize=(20,6))
+        plot_labels(test_labels, preds_test, label_mapper=idx_to_label)
+        wandb.log({"Labels_Preds_Plot_Test":wandb.Image(plt)})
+        plt.figure(figsize=(8,8))
+        plot_cm_dict(test_labels, preds_test, label_mapper=idx_to_label)
+        wandb.log({"Confusion_Matrix_Test":wandb.Image(plt)})
