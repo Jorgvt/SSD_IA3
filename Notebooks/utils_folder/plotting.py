@@ -71,6 +71,17 @@ def plot_cm(labels, preds, dataset, cmap='magma'):
     plt.xlabel("Predicted Label")
     plt.ylabel("True Label")
 
+def plot_cm_dict(labels, preds, label_mapper, cmap='magma'):
+    """
+    Plots the confusion matrix for a set of labels and preds from a dataset.
+    """
+    plot_heatmaps_raw(confusion_matrix(labels, preds), precision=0, cmap=cmap)
+    plt.colorbar()
+    plt.xticks(range(len(label_mapper)), label_mapper.values(), rotation=90)
+    plt.yticks(range(len(label_mapper)), label_mapper.values(), rotation=0)
+    plt.xlabel("Predicted Label")
+    plt.ylabel("True Label")
+
 def plot_cm_bundle_pth(device, model, dataset, dataloader, cmap='magma'):
     """
     Plots the confusion matrix for a model trained with a dataset and dataloader.
