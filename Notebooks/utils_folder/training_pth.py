@@ -61,6 +61,17 @@ class History():
             plt.legend()
 
         plt.show()
+    
+    def update_summary_metrics(self):
+        """
+        Updates the summary metrics from WandB to show the best value for each.
+        Currently it's considering best as higher. Should do something to 
+        choose either the higher or the lower depending on the name maybe.
+        """
+        for metric_name, metric_values in self.history.items():
+            best_idx = np.argmax(metric_values)
+            best_metric = metric_values[best_idx]
+            wandb.run.summary[f"best_{metric_name}"] = best_metric
 
 def train_step(model, optimizer, loss_fn, history, X, Y, metrics=None):
     """
