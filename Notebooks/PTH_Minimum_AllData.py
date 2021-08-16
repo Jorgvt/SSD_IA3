@@ -128,7 +128,7 @@ if __name__ == "__main__":
     if config["binary"]:
         config["classes"] = 2
 
-    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+    device = torch.device("cuda:2" if torch.cuda.is_available() else "cpu")
     print("Using device: ", device)
 
     with wandb.init(project='test-pth', entity='jorgvt', config = config):
@@ -185,6 +185,9 @@ if __name__ == "__main__":
 
         ## Train the model ##
         h = train_fn(device, model, optimizer, loss_fn, trainloader, testloader, config.epochs, metrics, checkpoint=checkpoint)
+
+        ## Load the best performant model
+        model.load_state_dict(torch.load(os.path.join(wandb.run.dir,'model.pth')))
 
         ## Get the labels and predictions for the whole datasets
         labels_train, preds_train = get_labels_and_preds(device, model, trainloader)

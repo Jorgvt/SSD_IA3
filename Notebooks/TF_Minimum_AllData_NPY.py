@@ -127,8 +127,8 @@ if __name__ == "__main__":
 
         ## Create tf.data.Dataset(s) from the npy arrays. Shuffle and batch them.
         train = tf.data.Dataset.from_tensor_slices((train, train_labels)).shuffle(16).batch(config.batch_size)
-        val = tf.data.Dataset.from_tensor_slices((val, val_labels)).shuffle(16).batch(config.batch_size)
-        test = tf.data.Dataset.from_tensor_slices((test, test_labels)).shuffle(16).batch(config.batch_size)
+        val = tf.data.Dataset.from_tensor_slices((val, val_labels)).batch(config.batch_size)
+        test = tf.data.Dataset.from_tensor_slices((test, test_labels)).batch(config.batch_size)
 
         print(f"Using {len_dataset} samples to train: {len(train)} (Train) & {len(val)} (Validation) & {len(test)} (Test).")
 
