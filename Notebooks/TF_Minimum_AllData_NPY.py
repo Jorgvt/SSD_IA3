@@ -6,7 +6,6 @@ from pathlib import Path
 import warnings
 warnings.filterwarnings("ignore", category=RuntimeWarning) 
 
-
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -37,27 +36,6 @@ def create_model(sampling_rate, input_shape, classes):
         tf.keras.layers.Dense(classes)
     ])
     return model
-
-def accuracy_fn(Y_pred, Y_true):
-    """
-    Calculates the accuracy of our model given its predictions and labels.
-
-    Parameters
-    ----------
-    Y_pred: torch.Tensor
-        Raw output from the nn (logits).
-    Y_true: torch.Tensor
-        Objective labels.
-    
-    Returns
-    -------
-    accuracy: float
-    """
-    Y_pred = torch.softmax(Y_pred, dim=-1)
-    Y_pred = Y_pred.argmax(dim=-1)
-    accuracy = torch.where(Y_pred==Y_true, 1, 0).sum() / len(Y_true)
-
-    return accuracy.item()
 
 def get_order(file_path):
     """
