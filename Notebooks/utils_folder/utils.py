@@ -3,6 +3,11 @@ import torch
 def get_labels_and_preds(device, model, dataloader):
     """
     Gets the true and predicted labels for a given dataloader.
+
+    Returns
+    -------
+    labels: list
+    preds: list
     """
     labels = []
     preds = []
