@@ -109,7 +109,8 @@ def weights_init(m):
             nn.init.zeros_(m.bias.data)
 
 if __name__ == "__main__":
-    
+    ## Set seeds for reproducibility
+
     ## Login into WandB
     wandb.login()
 
@@ -117,13 +118,12 @@ if __name__ == "__main__":
     config = {
         'epochs':50,
         'classes':5,
-        'batch_size':64,
+        'batch_size':256,
         'learning_rate':0.001,
         'channels':['C3','C4','O1','O2','LOC','ROC','CHIN1'],
         'binary':False,
-        'metadata': "Testing loss weights",
-        'test_size':0.3,
-        'train_test_split_seed':42
+        'weighted_loss':True,
+        'metadata': "Testing loss weights"
     }
     if config["binary"]:
         config["classes"] = 2
@@ -156,15 +156,18 @@ if __name__ == "__main__":
         ## Train-Test split using Pablo's indexes
         ### Load indexes. They have to be either ints or booleans.
         idx_train = np.loadtxt("../indices_train.txt").astype(int)
-        idx_test = np.loadtxt("../indices_test.txt").astype(int)
+        idx_val = np.loadtxt("../indices_val.txt").astype(int)
+        idx_test = np.loadtxt("../indices_test_2.txt").astype(int)
         ### Subset the concatenated dataset
         train = torch.utils.data.Subset(dataset_concat, indices=idx_train)
+        val = torch.utils.data.Subset(dataset_concat, indices=idx_val)
         test = torch.utils.data.Subset(dataset_concat, indices=idx_test)
-        print(f"Using {len_dataset_concat} samples to train: {len(train)} (Train) & {len(test)} (Test).")
+        print(f"Using {len_dataset_concat} samples to train: {len(train)} (Train) & {len(val)} (Validation) & {len(test)} (Test).")
 
         ## Instance the dataloaders
-        trainloader = torch.utils.data.DataLoader(train, batch_size = config.batch_size, drop_last=True, shuffle=True)
-        testloader = torch.utils.data.DataLoader(test, batch_size = config.batch_size, drop_last=True, shuffle=False)
+        trainloader = torch.utils.data.DataLoader(train, batch_size=config.batch_size, drop_last=True, shuffle=True, pin_memory=True)
+        valloader = torch.utils.data.DataLoader(val, batch_size=config.batch_size, drop_last=True, shuffle=False, pin_memory=True)
+        testloader = torch.utils.data.DataLoader(test, batch_size=config.batch_size, drop_last=True, shuffle=False, pin_memory=True)
         sampling_rate = int(datasets[0].sampling_rate)
 
         ## Define the model ##
@@ -173,7 +176,10 @@ if __name__ == "__main__":
         model.apply(weights_init)
         model.to(device)
         optimizer = torch.optim.Adam(model.parameters())
-        loss_fn = nn.CrossEntropyLoss(weight=torch.FloatTensor([1.63460515, 1. , 1.35084295, 1.56397516, 1.39006211]).to(device))
+        if config.weighted_loss:
+            loss_fn = nn.CrossEntropyLoss(weight=torch.FloatTensor([1.63460515, 1. , 1.35084295, 1.56397516, 1.39006211]).to(device))
+        else:
+            loss_fn = nn.CrossEntropyLoss()
 
         ## Define the metrics ##
         metrics = {
@@ -184,13 +190,15 @@ if __name__ == "__main__":
         checkpoint = Checkpoint(os.path.join(wandb.run.dir,'model.pth'), 'val_accuracy', mode='max')
 
         ## Train the model ##
-        h = train_fn(device, model, optimizer, loss_fn, trainloader, testloader, config.epochs, metrics, checkpoint=checkpoint)
+        h = train_fn(device, model, optimizer, loss_fn, trainloader, valloader, config.epochs, metrics, checkpoint=checkpoint)
 
         ## Load the best performant model
         model.load_state_dict(torch.load(os.path.join(wandb.run.dir,'model.pth')))
+        model.to(device) # Just in case
 
         ## Get the labels and predictions for the whole datasets
         labels_train, preds_train = get_labels_and_preds(device, model, trainloader)
+        labels_val, preds_val = get_labels_and_preds(device, model, valloader)
         labels_test, preds_test = get_labels_and_preds(device, model, testloader)
         
         ## Create and log figures
@@ -201,6 +209,13 @@ if __name__ == "__main__":
         plt.figure(figsize=(8,8))
         plot_cm(labels_train, preds_train, datasets[0])
         wandb.log({"Confusion_Matrix_Train":wandb.Image(plt)})
+        ### Validation
+        plt.figure(figsize=(20,6))
+        plot_labels(labels_val, preds_val, label_mapper=datasets[0].id_to_class_dict)
+        wandb.log({"Labels_Preds_Plot_Val":wandb.Image(plt)})
+        plt.figure(figsize=(8,8))
+        plot_cm(labels_val, preds_val, datasets[0])
+        wandb.log({"Confusion_Matrix_Val":wandb.Image(plt)})
         ### Test
         plt.figure(figsize=(20,6))
         plot_labels(labels_test, preds_test, label_mapper=datasets[0].id_to_class_dict)
