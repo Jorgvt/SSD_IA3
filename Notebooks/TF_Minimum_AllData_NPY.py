@@ -88,7 +88,7 @@ if __name__ == "__main__":
 
     ## Define the configuration parameters
     config = {
-        'epochs':1,
+        'epochs':50,
         'classes':5,
         'batch_size':64,
         'learning_rate':0.001,
