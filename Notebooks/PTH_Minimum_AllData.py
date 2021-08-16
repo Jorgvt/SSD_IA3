@@ -164,7 +164,7 @@ if __name__ == "__main__":
 
         ## Instance the dataloaders
         trainloader = torch.utils.data.DataLoader(train, batch_size = config.batch_size, drop_last=True, shuffle=True)
-        testloader = torch.utils.data.DataLoader(test, batch_size = config.batch_size, drop_last=True, shuffle=True)
+        testloader = torch.utils.data.DataLoader(test, batch_size = config.batch_size, drop_last=True, shuffle=False)
         sampling_rate = int(datasets[0].sampling_rate)
 
         ## Define the model ##
