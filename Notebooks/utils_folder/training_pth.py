@@ -95,6 +95,7 @@ def train_step(model, optimizer, loss_fn, history, X, Y, metrics=None):
     history: dict{str:float}
         Dictionary of metrics.
     """
+    model.train()
     optimizer.zero_grad()
     pred = model(X)
     loss = loss_fn(pred, Y)
@@ -131,6 +132,7 @@ def val_step(model, optimizer, loss_fn, history, X, Y, metrics=None):
     history: dict{str:float}
         Dictionary of metrics.
     """
+    model.eval()
     with torch.no_grad():
         pred = model(X)
         loss = loss_fn(pred, Y)
