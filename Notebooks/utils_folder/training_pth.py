@@ -144,9 +144,12 @@ def val_step(model, optimizer, loss_fn, history, X, Y, metrics=None):
 
     return history
 
-def train_fn(device, model, optimizer, loss_fn, trainloader, testloader, epochs, metrics, history=History, checkpoint=False, verbose=True):
-    ## Tell wandb to watch the model
-    wandb.watch(model, loss_fn, log="all", log_freq=10)
+def train_fn(device, model, optimizer, loss_fn, trainloader, testloader, epochs, metrics, 
+             history=History, checkpoint=False, verbose=True, log_wandb=True):
+    
+    if log_wandb:
+        ## Tell wandb to watch the model
+        wandb.watch(model, loss_fn, log="all", log_freq=10)
 
     history_epoch = history()
 
@@ -169,8 +172,8 @@ def train_fn(device, model, optimizer, loss_fn, trainloader, testloader, epochs,
         if checkpoint:
             checkpoint.step(model, history_epoch.history['val_accuracy'][-1])
 
-
-        ## Log the metrics to WandB
-        wandb.log(history_epoch.return_lasts())
+        if log_wandb:
+            ## Log the metrics to WandB
+            wandb.log(history_epoch.return_lasts())
 
     return history_epoch
